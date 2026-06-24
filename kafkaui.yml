@@ -1,0 +1,20 @@
+kafka:
+  clusters:
+    - name: cck
+      bootstrapServers: kafka1:9092,kafka2:9092,kafka3:9092
+      properties.security.protocol: SASL_SSL
+      properties.sasl.mechanism: PLAIN
+      properties.sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username=admin password='uosieQu6ACie0eichoo5ohdeeWaepowa';
+      properties.ssl.truststore.type: PEM
+      properties.ssl.truststore.location: /kafka/ssl/kafka.truststore.pem
+      properties.ssl.keystore.type: PEM
+      properties.ssl.keystore.location: /kafka/ssl/kafka.keystore.pem
+      #properties.ssl.keystore.certificate.chain: /kafka/ssl/kafka.keystore.pem
+      #properties.ssl.keystore.key: /kafka/ssl/kafka.keystore.key
+auth:
+  type: LOGIN_FORM
+spring:
+  security:
+    user:
+      name: admin
+      password: uosieQu6ACie0eichoo5ohdeeWaepowa

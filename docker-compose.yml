@@ -1,0 +1,482 @@
+
+
+services:
+  # ============================================================
+  # KAFKA BROKER 1
+  # ============================================================
+  kafka1:
+    image: apache/kafka:4.1.2
+    hostname: kafka1
+    container_name: kafka1
+    ports:
+      - "9093:9093"
+      - "9092:9092"
+    volumes:
+      - ./kafka_cck1/kafka_jaas.conf:/opt/kafka/config/kafka_jaas.conf
+      - ./kafka_cck1/data:/opt/kafka/data
+      - ./kafka_cck1/ssl/kafka.keystore.pem:/etc/kafka/secrets/kafka.keystore.pem:ro
+      - ./kafka_cck1/ssl/kafka.keystore.key:/etc/kafka/secrets/kafka.keystore.key:ro
+      - ./kafka_cck1/ssl/CAs/kafka.truststore.pem:/etc/kafka/secrets/kafka.truststore.pem:ro
+    environment:
+      KAFKA_PORT: 9092
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_BROKER_ID: 1001
+      KAFKA_NODE_ID: 1001
+      CLUSTER_ID: 1tpzF-k0TC-r2Jubpi8fig
+      KAFKA_LOG_DIRS: /opt/kafka/data
+      KAFKA_BROKER_ID_GENERATION_ENABLE: "False"
+      KAFKA_ADVERTISED_HOST_NAME: kafka1
+      KAFKA_LISTENERS: INTER_BROKER://:9092,CONTROLLER://:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:SASL_SSL,INTER_BROKER:SASL_SSL
+      KAFKA_ADVERTISED_LISTENERS: INTER_BROKER://kafka1:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTER_BROKER
+      KAFKA_SSL_KEYSTORE_TYPE: PEM
+      KAFKA_SSL_TRUSTSTORE_TYPE: PEM
+      KAFKA_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.truststore.pem
+      KAFKA_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.keystore.pem
+      KAFKA_SASL_ENABLED_MECHANISMS: PLAIN,SCRAM-SHA-256,SCRAM-SHA-512
+      KAFKA_LISTENER_NAME_CONTROLLER_SASL_ENABLED_MECHANISMS: PLAIN
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+      KAFKA_SASL_MECHANISM_CONTROLLER_PROTOCOL: PLAIN
+      KAFKA_OPTS: -Djava.security.auth.login.config=/opt/kafka/config/kafka_jaas.conf
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1001@kafka1:9093,1002@kafka2:9093,1003@kafka3:9093
+      KAFKA_AUTHORIZER_CLASS_NAME: org.apache.kafka.metadata.authorizer.StandardAuthorizer
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+      KAFKA_SUPER_USERS: "User:admin"
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 2
+      KAFKA_MIN_INSYNC_REPLICAS: 2
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 2
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+    networks:
+      - kafka-net
+
+  # ============================================================
+  # KAFKA BROKER 2
+  # ============================================================
+  kafka2:
+    image: apache/kafka:4.1.2
+    hostname: kafka2
+    container_name: kafka2
+    ports:
+      - "9095:9093"
+      - "9094:9092"
+    volumes:
+      - ./kafka_cck2/kafka_jaas.conf:/opt/kafka/config/kafka_jaas.conf
+      - ./kafka_cck2/data:/opt/kafka/data
+      - ./kafka_cck2/ssl/kafka.keystore.pem:/etc/kafka/secrets/kafka.keystore.pem:ro
+      - ./kafka_cck2/ssl/kafka.keystore.key:/etc/kafka/secrets/kafka.keystore.key:ro
+      - ./kafka_cck2/ssl/CAs/kafka.truststore.pem:/etc/kafka/secrets/kafka.truststore.pem:ro
+    environment:
+      KAFKA_PORT: 9092
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_BROKER_ID: 1002
+      KAFKA_NODE_ID: 1002
+      CLUSTER_ID: 1tpzF-k0TC-r2Jubpi8fig
+      KAFKA_LOG_DIRS: /opt/kafka/data
+      KAFKA_BROKER_ID_GENERATION_ENABLE: "False"
+      KAFKA_ADVERTISED_HOST_NAME: kafka2
+      KAFKA_LISTENERS: INTER_BROKER://:9092,CONTROLLER://:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:SASL_SSL,INTER_BROKER:SASL_SSL
+      KAFKA_ADVERTISED_LISTENERS: INTER_BROKER://kafka2:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTER_BROKER
+      KAFKA_SSL_KEYSTORE_TYPE: PEM
+      KAFKA_SSL_TRUSTSTORE_TYPE: PEM
+      KAFKA_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.truststore.pem
+      KAFKA_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.keystore.pem
+      KAFKA_SASL_ENABLED_MECHANISMS: PLAIN,SCRAM-SHA-256,SCRAM-SHA-512
+      KAFKA_LISTENER_NAME_CONTROLLER_SASL_ENABLED_MECHANISMS: PLAIN
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+      KAFKA_SASL_MECHANISM_CONTROLLER_PROTOCOL: PLAIN
+      KAFKA_OPTS: -Djava.security.auth.login.config=/opt/kafka/config/kafka_jaas.conf
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1001@kafka1:9093,1002@kafka2:9093,1003@kafka3:9093
+      KAFKA_AUTHORIZER_CLASS_NAME: org.apache.kafka.metadata.authorizer.StandardAuthorizer
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+      KAFKA_SUPER_USERS: "User:admin"
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 2
+      KAFKA_MIN_INSYNC_REPLICAS: 2
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 2
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+    networks:
+      - kafka-net
+
+  # ============================================================
+  # KAFKA BROKER 3
+  # ============================================================
+  kafka3:
+    image: apache/kafka:4.1.2
+    hostname: kafka3
+    container_name: kafka3
+    ports:
+      - "9098:9093"
+      - "9096:9092"
+    volumes:
+      - ./kafka_cck3/kafka_jaas.conf:/opt/kafka/config/kafka_jaas.conf
+      - ./kafka_cck3/data:/opt/kafka/data
+      - ./kafka_cck3/ssl/kafka.keystore.pem:/etc/kafka/secrets/kafka.keystore.pem:ro
+      - ./kafka_cck3/ssl/kafka.keystore.key:/etc/kafka/secrets/kafka.keystore.key:ro
+      - ./kafka_cck3/ssl/CAs/kafka.truststore.pem:/etc/kafka/secrets/kafka.truststore.pem:ro
+    environment:
+      KAFKA_PORT: 9092
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_BROKER_ID: 1003
+      KAFKA_NODE_ID: 1003
+      CLUSTER_ID: 1tpzF-k0TC-r2Jubpi8fig
+      KAFKA_LOG_DIRS: /opt/kafka/data
+      KAFKA_BROKER_ID_GENERATION_ENABLE: "False"
+      KAFKA_ADVERTISED_HOST_NAME: kafka3
+      KAFKA_LISTENERS: INTER_BROKER://:9092,CONTROLLER://:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:SASL_SSL,INTER_BROKER:SASL_SSL
+      KAFKA_ADVERTISED_LISTENERS: INTER_BROKER://kafka3:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTER_BROKER
+      KAFKA_SSL_KEYSTORE_TYPE: PEM
+      KAFKA_SSL_TRUSTSTORE_TYPE: PEM
+      KAFKA_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.truststore.pem
+      KAFKA_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.keystore.pem
+      KAFKA_SASL_ENABLED_MECHANISMS: PLAIN,SCRAM-SHA-256,SCRAM-SHA-512
+      KAFKA_LISTENER_NAME_CONTROLLER_SASL_ENABLED_MECHANISMS: PLAIN
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+      KAFKA_SASL_MECHANISM_CONTROLLER_PROTOCOL: PLAIN
+      KAFKA_OPTS: -Djava.security.auth.login.config=/opt/kafka/config/kafka_jaas.conf
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1001@kafka1:9093,1002@kafka2:9093,1003@kafka3:9093
+      KAFKA_AUTHORIZER_CLASS_NAME: org.apache.kafka.metadata.authorizer.StandardAuthorizer
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+      KAFKA_SUPER_USERS: "User:admin"
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 2
+      KAFKA_MIN_INSYNC_REPLICAS: 2
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 2
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+    networks:
+      - kafka-net
+
+  # ============================================================
+  # KAFKA BROKER 4 (Mirror - второй кластер)
+  # ============================================================
+  kafka4:
+    image: apache/kafka:4.1.2
+    hostname: kafka4
+    container_name: kafka4
+    ports:
+      - "9193:9093"
+      - "9192:9092"
+    volumes:
+      - ./kafka_cck4/kafka_jaas.conf:/opt/kafka/config/kafka_jaas.conf
+      - ./kafka_cck4/data:/opt/kafka/data
+      - ./kafka_cck4/ssl/kafka.keystore.pem:/etc/kafka/secrets/kafka.keystore.pem:ro
+      - ./kafka_cck4/ssl/kafka.keystore.key:/etc/kafka/secrets/kafka.keystore.key:ro
+      - ./kafka_cck4/ssl/CAs/kafka.truststore.pem:/etc/kafka/secrets/kafka.truststore.pem:ro
+    environment:
+      KAFKA_PORT: 9092
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_BROKER_ID: 2001
+      KAFKA_NODE_ID: 2001
+      CLUSTER_ID: 2tpzF-k0TC-r2Jubpi8fig
+      KAFKA_LOG_DIRS: /opt/kafka/data
+      KAFKA_BROKER_ID_GENERATION_ENABLE: "False"
+      KAFKA_ADVERTISED_HOST_NAME: kafka4
+      KAFKA_LISTENERS: INTER_BROKER://:9092,CONTROLLER://:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:SASL_SSL,INTER_BROKER:SASL_SSL
+      KAFKA_ADVERTISED_LISTENERS: INTER_BROKER://kafka4:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTER_BROKER
+      KAFKA_SSL_KEYSTORE_TYPE: PEM
+      KAFKA_SSL_TRUSTSTORE_TYPE: PEM
+      KAFKA_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.truststore.pem
+      KAFKA_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.keystore.pem
+      KAFKA_SASL_ENABLED_MECHANISMS: PLAIN,SCRAM-SHA-256,SCRAM-SHA-512
+      KAFKA_LISTENER_NAME_CONTROLLER_SASL_ENABLED_MECHANISMS: PLAIN
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+      KAFKA_SASL_MECHANISM_CONTROLLER_PROTOCOL: PLAIN
+      KAFKA_OPTS: -Djava.security.auth.login.config=/opt/kafka/config/kafka_jaas.conf
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 2001@kafka4:9093,2002@kafka5:9093,2003@kafka6:9093
+      KAFKA_AUTHORIZER_CLASS_NAME: org.apache.kafka.metadata.authorizer.StandardAuthorizer
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+      KAFKA_SUPER_USERS: "User:admin"
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 2
+      KAFKA_MIN_INSYNC_REPLICAS: 2
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 2
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+    networks:
+      - kafka-net
+
+  # ============================================================
+  # KAFKA BROKER 5 (Mirror - второй кластер)
+  # ============================================================
+  kafka5:
+    image: apache/kafka:4.1.2
+    hostname: kafka5
+    container_name: kafka5
+    ports:
+      - "9195:9093"
+      - "9194:9092"
+    volumes:
+      - ./kafka_cck5/kafka_jaas.conf:/opt/kafka/config/kafka_jaas.conf
+      - ./kafka_cck5/data:/opt/kafka/data
+      - ./kafka_cck5/ssl/kafka.keystore.pem:/etc/kafka/secrets/kafka.keystore.pem:ro
+      - ./kafka_cck5/ssl/kafka.keystore.key:/etc/kafka/secrets/kafka.keystore.key:ro
+      - ./kafka_cck5/ssl/CAs/kafka.truststore.pem:/etc/kafka/secrets/kafka.truststore.pem:ro
+    environment:
+      KAFKA_PORT: 9092
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_BROKER_ID: 2002
+      KAFKA_NODE_ID: 2002
+      CLUSTER_ID: 2tpzF-k0TC-r2Jubpi8fig
+      KAFKA_LOG_DIRS: /opt/kafka/data
+      KAFKA_BROKER_ID_GENERATION_ENABLE: "False"
+      KAFKA_ADVERTISED_HOST_NAME: kafka5
+      KAFKA_LISTENERS: INTER_BROKER://:9092,CONTROLLER://:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:SASL_SSL,INTER_BROKER:SASL_SSL
+      KAFKA_ADVERTISED_LISTENERS: INTER_BROKER://kafka5:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTER_BROKER
+      KAFKA_SSL_KEYSTORE_TYPE: PEM
+      KAFKA_SSL_TRUSTSTORE_TYPE: PEM
+      KAFKA_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.truststore.pem
+      KAFKA_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.keystore.pem
+      KAFKA_SASL_ENABLED_MECHANISMS: PLAIN,SCRAM-SHA-256,SCRAM-SHA-512
+      KAFKA_LISTENER_NAME_CONTROLLER_SASL_ENABLED_MECHANISMS: PLAIN
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+      KAFKA_SASL_MECHANISM_CONTROLLER_PROTOCOL: PLAIN
+      KAFKA_OPTS: -Djava.security.auth.login.config=/opt/kafka/config/kafka_jaas.conf
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 2001@kafka4:9093,2002@kafka5:9093,2003@kafka6:9093
+      KAFKA_AUTHORIZER_CLASS_NAME: org.apache.kafka.metadata.authorizer.StandardAuthorizer
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+      KAFKA_SUPER_USERS: "User:admin"
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 2
+      KAFKA_MIN_INSYNC_REPLICAS: 2
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 2
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+    networks:
+      - kafka-net
+
+  # ============================================================
+  # KAFKA BROKER 6 (Mirror - второй кластер)
+  # ============================================================
+  kafka6:
+    image: apache/kafka:4.1.2
+    hostname: kafka6
+    container_name: kafka6
+    ports:
+      - "9198:9093"
+      - "9196:9092"
+    volumes:
+      - ./kafka_cck6/kafka_jaas.conf:/opt/kafka/config/kafka_jaas.conf
+      - ./kafka_cck6/data:/opt/kafka/data
+      - ./kafka_cck6/ssl/kafka.keystore.pem:/etc/kafka/secrets/kafka.keystore.pem:ro
+      - ./kafka_cck6/ssl/kafka.keystore.key:/etc/kafka/secrets/kafka.keystore.key:ro
+      - ./kafka_cck6/ssl/CAs/kafka.truststore.pem:/etc/kafka/secrets/kafka.truststore.pem:ro
+    environment:
+      KAFKA_PORT: 9092
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_BROKER_ID: 2003
+      KAFKA_NODE_ID: 2003
+      CLUSTER_ID: 2tpzF-k0TC-r2Jubpi8fig
+      KAFKA_LOG_DIRS: /opt/kafka/data
+      KAFKA_BROKER_ID_GENERATION_ENABLE: "False"
+      KAFKA_ADVERTISED_HOST_NAME: kafka6
+      KAFKA_LISTENERS: INTER_BROKER://:9092,CONTROLLER://:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:SASL_SSL,INTER_BROKER:SASL_SSL
+      KAFKA_ADVERTISED_LISTENERS: INTER_BROKER://kafka6:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTER_BROKER
+      KAFKA_SSL_KEYSTORE_TYPE: PEM
+      KAFKA_SSL_TRUSTSTORE_TYPE: PEM
+      KAFKA_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.truststore.pem
+      KAFKA_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.keystore.pem
+      KAFKA_SASL_ENABLED_MECHANISMS: PLAIN,SCRAM-SHA-256,SCRAM-SHA-512
+      KAFKA_LISTENER_NAME_CONTROLLER_SASL_ENABLED_MECHANISMS: PLAIN
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+      KAFKA_SASL_MECHANISM_CONTROLLER_PROTOCOL: PLAIN
+      KAFKA_OPTS: -Djava.security.auth.login.config=/opt/kafka/config/kafka_jaas.conf
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 2001@kafka4:9093,2002@kafka5:9093,2003@kafka6:9093
+      KAFKA_AUTHORIZER_CLASS_NAME: org.apache.kafka.metadata.authorizer.StandardAuthorizer
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+      KAFKA_SUPER_USERS: "User:admin"
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 2
+      KAFKA_MIN_INSYNC_REPLICAS: 2
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 2
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+    networks:
+      - kafka-net
+
+  # ============================================================
+  # MIRROR MAKER 2
+  # ============================================================
+  mirror-maker:
+    image: apache/kafka:4.1.2
+    container_name: mirror-maker
+    depends_on:
+      - kafka1
+      - kafka2
+      - kafka3
+      - kafka4
+      - kafka5
+      - kafka6
+    volumes:
+      - ./mirror-maker.properties:/opt/kafka/config/mirror-maker.properties
+      - ./kafka_cck1/ssl/CAs/kafka.truststore.pem:/etc/kafka/secrets/truststore.pem:ro
+      - ./kafka_cck1/ssl/kafka.keystore.pem:/etc/kafka/secrets/keystore.pem:ro
+      - ./kafka_cck1/ssl/kafka.keystore.key:/etc/kafka/secrets/keystore.key:ro
+      - ./kafka_cck4/ssl/CAs/kafka.truststore.pem:/etc/kafka/secrets/truststore-mirror.pem:ro
+      - ./kafka_cck4/ssl/kafka.keystore.pem:/etc/kafka/secrets/keystore-mirror.pem:ro
+      - ./kafka_cck4/ssl/kafka.keystore.key:/etc/kafka/secrets/keystore-mirror.key:ro
+    entrypoint: >
+      /bin/bash -c "
+      echo '⏳ Ожидание запуска Kafka...' &&
+      sleep 60 &&
+      /opt/kafka/bin/connect-mirror-maker.sh /opt/kafka/config/mirror-maker.properties
+      "
+    networks:
+      - kafka-net
+
+  # ============================================================
+  # KAFBAT UI
+  # ============================================================
+  kafbat-ui:
+    image: ghcr.io/kafbat/kafka-ui:latest
+    container_name: kafbat-ui
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_CONFIG_ADDITIONAL_LOCATION: /config-ui.yml
+      SERVER_SERVLET_CONTEXT_PATH: /kafka_ui/
+    volumes:
+      - ./kafkaui.yml:/config-ui.yml
+      - ./kafka_cck1/ssl/CAs/kafka.truststore.pem:/kafka/ssl/kafka.truststore.pem:ro
+      - ./kafka_cck1/ssl/kafka.keystore.pem:/kafka/ssl/kafka.keystore.pem:ro
+      - ./kafka_cck1/ssl/kafka.keystore.key:/kafka/ssl/kafka.keystore.key:ro
+    networks:
+      - kafka-net
+
+  # ============================================================
+  # KAFKA INIT
+  # ============================================================
+  kafka-init:
+    image: apache/kafka:4.1.2
+    container_name: kafka-init
+    depends_on:
+      - kafka1
+      - kafka2
+      - kafka3
+    volumes:
+      - ./scripts:/scripts
+      - ./kafka_cck1/ssl/CAs/kafka.truststore.pem:/etc/kafka/secrets/kafka.truststore.pem:ro
+      - ./kafka_cck1/ssl/kafka.keystore.pem:/etc/kafka/secrets/kafka.keystore.pem:ro
+      - ./kafka_cck1/ssl/kafka.keystore.key:/etc/kafka/secrets/kafka.keystore.key:ro
+      - ./kafka_cck1/kafka_jaas.conf:/opt/kafka/config/kafka_jaas.conf
+    entrypoint: ["bash", "/scripts/init-kafka.sh"]
+    networks:
+      - kafka-net
+
+  # ============================================================
+  # SCHEMA REGISTRY
+  # ============================================================
+  schema-registry:
+    image: confluentinc/cp-schema-registry:latest
+    container_name: schema-registry
+    depends_on:
+      - kafka1
+      - kafka2
+      - kafka3
+    ports:
+      - "8081:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: SASL_SSL://kafka1:9093,SASL_SSL://kafka2:9093,SASL_SSL://kafka3:9093
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+      SCHEMA_REGISTRY_KAFKASTORE_SECURITY_PROTOCOL: SASL_SSL
+      SCHEMA_REGISTRY_KAFKASTORE_SASL_MECHANISM: PLAIN
+      SCHEMA_REGISTRY_KAFKASTORE_SASL_JAAS_CONFIG: org.apache.kafka.common.security.plain.PlainLoginModule required username="admin" password="uosieQu6ACie0eichoo5ohdeeWaepowa";
+      SCHEMA_REGISTRY_KAFKASTORE_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.truststore.pem
+      SCHEMA_REGISTRY_KAFKASTORE_SSL_TRUSTSTORE_TYPE: PEM
+      SCHEMA_REGISTRY_KAFKASTORE_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.keystore.pem
+      SCHEMA_REGISTRY_KAFKASTORE_SSL_KEYSTORE_TYPE: PEM
+    volumes:
+      - ./kafka_cck1/ssl:/etc/kafka/secrets
+    networks:
+      - kafka-net
+
+  # ============================================================
+  # ELASTICSEARCH
+  # ============================================================
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: elasticsearch
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - kafka-net
+
+  # ============================================================
+  # KIBANA
+  # ============================================================
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: kibana
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - kafka-net
+
+  # ============================================================
+  # HDFS NAMENODE
+  # ============================================================
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: namenode
+    hostname: namenode
+    platform: linux/amd64
+    ports:
+      - "9870:9870"
+      - "9000:9000" 
+    environment:
+      - CLUSTER_NAME=test
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - HDFS_CONF_dfs_replication=1
+   
+    volumes:
+      - ./hadoop_data/namenode:/hadoop/dfs/name
+    networks:
+      - kafka-net
+
+  datanode:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode
+    hostname: datanode
+    platform: linux/amd64
+    ports: []
+    environment:
+      - CLUSTER_NAME=test
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+
+    volumes:
+      - ./hadoop_data/datanode:/hadoop/dfs/data
+    networks:
+      - kafka-net
+    depends_on:
+      - namenode
+volumes:
+  es_data:
+
+networks:
+  kafka-net:
+    driver: bridge

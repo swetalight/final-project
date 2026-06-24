@@ -1,0 +1,324 @@
+# =====================================================
+# Prometheus Alertmanager — Конфигурация алертов
+# =====================================================
+
+groups:
+  # =====================================================
+  # Алерты для Kafka кластера
+  # =====================================================
+  - name: kafka_alerts
+    rules:
+      # -------------------------------------------------
+      # КРИТИЧЕСКИЙ: Брокер Kafka недоступен
+      # -------------------------------------------------
+      - alert: KafkaBrokerDown
+        expr: up{job="kafka"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: kafka
+        annotations:
+          summary: "🚨 Kafka брокер {{ $labels.instance }} недоступен"
+          description: "Брокер Kafka {{ $labels.instance }} не отвечает более 1 минуты. Проверьте состояние контейнера."
+
+      # -------------------------------------------------
+      # КРИТИЧЕСКИЙ: Нет активных брокеров
+      # -------------------------------------------------
+      - alert: KafkaNoActiveBrokers
+        expr: count(up{job="kafka"} == 1) == 0
+        for: 30s
+        labels:
+          severity: critical
+          service: kafka
+        annotations:
+          summary: "🚨 Нет активных брокеров Kafka"
+          description: "Все брокеры Kafka недоступны. Кластер не работает."
+
+      # -------------------------------------------------
+      # ПРЕДУПРЕЖДЕНИЕ: Высокая задержка потребителей
+      # -------------------------------------------------
+      - alert: KafkaHighConsumerLag
+        expr: kafka_consumer_lag > 1000
+        for: 5m
+        labels:
+          severity: warning
+          service: kafka
+        annotations:
+          summary: "⚠️ Высокая задержка потребителя Kafka"
+          description: "Задержка потребителя {{ $labels.consumergroup }} в топике {{ $labels.topic }} превышает 1000 сообщений. Текущая задержка: {{ $value }}."
+
+      # -------------------------------------------------
+      # ПРЕДУПРЕЖДЕНИЕ: Критическая задержка потребителей
+      # -------------------------------------------------
+      - alert: KafkaCriticalConsumerLag
+        expr: kafka_consumer_lag > 10000
+        for: 5m
+        labels:
+          severity: critical
+          service: kafka
+        annotations:
+          summary: "🚨 Критическая задержка потребителя Kafka"
+          description: "Задержка потребителя {{ $labels.consumergroup }} в топике {{ $labels.topic }} превышает 10000 сообщений. Текущая задержка: {{ $value }}. Требуется немедленное вмешательство."
+
+      # -------------------------------------------------
+      # ПРЕДУПРЕЖДЕНИЕ: Недостаточная репликация топика
+      # -------------------------------------------------
+      - alert: KafkaUnderReplicatedPartitions
+        expr: kafka_topic_partition_under_replicated_partitions > 0
+        for: 2m
+        labels:
+          severity: warning
+          service: kafka
+        annotations:
+          summary: "⚠️ Недостаточная репликация топика"
+          description: "Топик {{ $labels.topic }} имеет недостаточное количество реплик. Количество недосинхронизированных партиций: {{ $value }}."
+
+      # -------------------------------------------------
+      # КРИТИЧЕСКИЙ: Офлайн партиции
+      # -------------------------------------------------
+      - alert: KafkaOfflinePartitions
+        expr: kafka_topic_partition_offline_partitions > 0
+        for: 1m
+        labels:
+          severity: critical
+          service: kafka
+        annotations:
+          summary: "🚨 Офлайн партиции в Kafka"
+          description: "Топик {{ $labels.topic }} имеет офлайн партиции. Количество: {{ $value }}."
+
+      # -------------------------------------------------
+      # ПРЕДУПРЕЖДЕНИЕ: Высокое использование диска
+      # -------------------------------------------------
+      - alert: KafkaHighDiskUsage
+        expr: (kafka_server_LogManager_Value{name="TotalLogSize"} / kafka_server_LogManager_Value{name="TotalLogDirSize"}) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          service: kafka
+        annotations:
+          summary: "⚠️ Высокое использование диска брокера"
+          description: "Использование диска брокера {{ $labels.instance }} превышает 85%. Текущее значение: {{ $value }}%."
+
+      # -------------------------------------------------
+      # КРИТИЧЕСКИЙ: Критическое использование диска
+      # -------------------------------------------------
+      - alert: KafkaCriticalDiskUsage
+        expr: (kafka_server_LogManager_Value{name="TotalLogSize"} / kafka_server_LogManager_Value{name="TotalLogDirSize"}) * 100 > 95
+        for: 2m
+        labels:
+          severity: critical
+          service: kafka
+        annotations:
+          summary: "🚨 Критическое использование диска брокера"
+          description: "Использование диска брокера {{ $labels.instance }} превышает 95%. Текущее значение: {{ $value }}%. Требуется немедленное действие."
+
+      # -------------------------------------------------
+      # ПРЕДУПРЕЖДЕНИЕ: Высокое количество ошибок
+      # -------------------------------------------------
+      - alert: KafkaHighErrorRate
+        expr: rate(kafka_network_RequestMetrics_ErrorsTotal{name="Produce"}[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+          service: kafka
+        annotations:
+          summary: "⚠️ Высокий уровень ошибок в Kafka"
+          description: "Количество ошибок в брокере {{ $labels.instance }} превышает 10 за 5 минут."
+
+      # -------------------------------------------------
+      # КРИТИЧЕСКИЙ: Ошибки аутентификации
+      # -------------------------------------------------
+      - alert: KafkaAuthenticationFailure
+        expr: rate(kafka_server_BrokerTopicMetrics_Count{name="FailedAuthentication"}[5m]) > 5
+        for: 5m
+        labels:
+          severity: critical
+          service: kafka
+        annotations:
+          summary: "🚨 Много ошибок аутентификации в Kafka"
+          description: "Брокер {{ $labels.instance }} зафиксировал более 5 ошибок аутентификации за 5 минут. Возможная атака или проблемы с ACL."
+
+  # =====================================================
+  # Алерты для Zookeeper (если используется)
+  # =====================================================
+  - name: zookeeper_alerts
+    rules:
+      - alert: ZookeeperDown
+        expr: up{job="zookeeper"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: zookeeper
+        annotations:
+          summary: "🚨 Zookeeper недоступен"
+          description: "Zookeeper {{ $labels.instance }} не отвечает более 1 минуты."
+
+  # =====================================================
+  # Алерты для Elasticsearch
+  # =====================================================
+  - name: elasticsearch_alerts
+    rules:
+      - alert: ElasticsearchDown
+        expr: up{job="elasticsearch"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: elasticsearch
+        annotations:
+          summary: "🚨 Elasticsearch недоступен"
+          description: "Elasticsearch {{ $labels.instance }} не отвечает более 1 минуты."
+
+      - alert: ElasticsearchYellowCluster
+        expr: elasticsearch_cluster_health_status{color="yellow"} == 1
+        for: 5m
+        labels:
+          severity: warning
+          service: elasticsearch
+        annotations:
+          summary: "⚠️ Elasticsearch кластер в состоянии YELLOW"
+          description: "Кластер Elasticsearch находится в состоянии YELLOW. Проверьте реплики."
+
+      - alert: ElasticsearchRedCluster
+        expr: elasticsearch_cluster_health_status{color="red"} == 1
+        for: 1m
+        labels:
+          severity: critical
+          service: elasticsearch
+        annotations:
+          summary: "🚨 Elasticsearch кластер в состоянии RED"
+          description: "Кластер Elasticsearch находится в состоянии RED. Немедленное вмешательство требуется."
+
+  # =====================================================
+  # Алерты для Schema Registry
+  # =====================================================
+  - name: schema_registry_alerts
+    rules:
+      - alert: SchemaRegistryDown
+        expr: up{job="schema-registry"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: schema-registry
+        annotations:
+          summary: "🚨 Schema Registry недоступен"
+          description: "Schema Registry {{ $labels.instance }} не отвечает более 1 минуты."
+
+  # =====================================================
+  # Алерты для MirrorMaker 2
+  # =====================================================
+  - name: mirror_maker_alerts
+    rules:
+      - alert: MirrorMakerDown
+        expr: up{job="mirror-maker"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: mirror-maker
+        annotations:
+          summary: "🚨 MirrorMaker 2 недоступен"
+          description: "MirrorMaker 2 не отвечает более 1 минуты. Репликация данных остановлена."
+
+      - alert: MirrorMakerLag
+        expr: kafka_mirror_maker_lag > 100
+        for: 5m
+        labels:
+          severity: warning
+          service: mirror-maker
+        annotations:
+          summary: "⚠️ Задержка MirrorMaker 2"
+          description: "Задержка MirrorMaker 2 превышает 100 сообщений. Текущее значение: {{ $value }}."
+
+  # =====================================================
+  # Алерты для Docker/контейнеров
+  # =====================================================
+  - name: docker_alerts
+    rules:
+      - alert: ContainerDown
+        expr: (time() - container_last_seen) > 60
+        for: 1m
+        labels:
+          severity: critical
+          service: docker
+        annotations:
+          summary: "🚨 Контейнер не работает"
+          description: "Контейнер {{ $labels.name }} не отвечает более 60 секунд."
+
+      - alert: ContainerHighMemory
+        expr: (container_memory_usage_bytes / container_spec_memory_limit_bytes) * 100 > 90
+        for: 5m
+        labels:
+          severity: warning
+          service: docker
+        annotations:
+          summary: "⚠️ Высокое использование памяти в контейнере"
+          description: "Контейнер {{ $labels.name }} использует более 90% памяти. Текущее значение: {{ $value }}%."
+
+  # =====================================================
+  # Алерты для HDFS
+  # =====================================================
+  - name: hdfs_alerts
+    rules:
+      - alert: HDFSNameNodeDown
+        expr: up{job="namenode"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: hdfs
+        annotations:
+          summary: "🚨 HDFS NameNode недоступен"
+          description: "NameNode HDFS не отвечает более 1 минуты."
+
+      - alert: HDFSDataNodeDown
+        expr: up{job="datanode"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: hdfs
+        annotations:
+          summary: "🚨 HDFS DataNode недоступен"
+          description: "DataNode HDFS не отвечает более 1 минуты. Проверьте репликацию."
+
+      - alert: HDFSDiskUsage
+        expr: (hdfs_namenode_capacity_used / hdfs_namenode_capacity_total) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          service: hdfs
+        annotations:
+          summary: "⚠️ Высокое использование HDFS"
+          description: "Использование HDFS превышает 85%. Текущее значение: {{ $value }}%."
+
+      - alert: HDFSMissingBlocks
+        expr: hdfs_namenode_missing_blocks > 0
+        for: 1m
+        labels:
+          severity: critical
+          service: hdfs
+        annotations:
+          summary: "🚨 Потерянные блоки в HDFS"
+          description: "Обнаружены потерянные блоки в HDFS. Количество: {{ $value }}."
+
+  # =====================================================
+  # Алерты для Spark
+  # =====================================================
+  - name: spark_alerts
+    rules:
+      - alert: SparkJobFailed
+        expr: spark_job_failed_total > 0
+        for: 1m
+        labels:
+          severity: critical
+          service: spark
+        annotations:
+          summary: "🚨 Ошибка Spark задачи"
+          description: "Задача Spark завершилась с ошибкой. Проверьте логи."
+
+      - alert: SparkJobLongRunning
+        expr: (time() - spark_job_start_time) > 3600
+        for: 5m
+        labels:
+          severity: warning
+          service: spark
+        annotations:
+          summary: "⚠️ Долгая задача Spark"
+          description: "Задача Spark выполняется более 1 часа. Проверьте производительность."

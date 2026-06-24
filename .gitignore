@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+venv/
+env/
+.venv/
+practicum.venv/
+
+# Docker
+*.log
+*.pid
+*.pid.lock
+*.lock
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Sensitive data
+*.pem
+*.crt
+*.key
+*.jks
+*.p12
+.env
+*.secret
+
+# Kafka data
+kafka_cck*/data/
+kafka_cck*/ssl/
+
+# HDFS data
+hadoop_data/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Logs
+logs/
+*.log
+
+# Screenshots
+screenshots/
+
+# Secrets
+secrets/

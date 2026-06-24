@@ -1,0 +1,39 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+rule_files:
+  - "/etc/prometheus/alerts.yml"
+
+scrape_configs:
+  # Kafka брокеры (JMX Exporter)
+  - job_name: 'kafka'
+    static_configs:
+      - targets:
+        - kafka1:5556
+        - kafka2:5556
+        - kafka3:5556
+
+  # Elasticsearch
+  - job_name: 'elasticsearch'
+    static_configs:
+      - targets:
+        - elasticsearch:9200
+
+  # Schema Registry
+  - job_name: 'schema-registry'
+    static_configs:
+      - targets:
+        - schema-registry:8081
+
+  # Prometheus сам
+  - job_name: 'prometheus'
+    static_configs:
+      - targets:
+        - localhost:9090

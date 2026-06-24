@@ -1,0 +1,49 @@
+{
+  "kafka": {
+    "bootstrap_servers": "localhost:9092,localhost:9094,localhost:9096",
+    "security_protocol": "SASL_SSL",
+    "sasl_mechanism": "SCRAM-SHA-512",
+    "users": {
+      "shop": {
+        "username": "shop",
+        "password": "shop123"
+      },
+      "client": {
+        "username": "client",
+        "password": "client456"
+      },
+      "processor": {
+        "username": "processor",
+        "password": "processor789"
+      },
+      "analytics": {
+        "username": "analytics",
+        "password": "analytics321"
+      }
+    },
+    "ssl": {
+      "ca": "/Users/svetlanaolefirenko/yapracticum/final_projects/secrets/kafka.truststore.pem",
+      "certificate": "/Users/svetlanaolefirenko/yapracticum/final_projects/secrets/kafka.keystore.pem",
+      "key": "/Users/svetlanaolefirenko/yapracticum/final_projects/secrets/kafka.keystore.key"
+    },
+    "topics": {
+      "products": "products",
+      "client_requests": "client-requests",
+      "filtered_products": "filtered-products",
+      "recommendations": "recommendations",
+      "banned_products": "banned-products"
+    }
+  },
+  "elasticsearch": {
+    "host": "localhost:9200",
+    "index": "products"
+  },
+  "hdfs": {
+    "url": "hdfs://localhost:9000",
+    "path": "/data/products"
+  },
+  "spark": {
+    "app_name": "MarketplaceAnalytics",
+    "master": "local[*]"
+  }
+}
