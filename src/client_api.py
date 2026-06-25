@@ -1,69 +1,147 @@
 #!/usr/bin/env python3
-import json
-import uuid
-from confluent_kafka import Producer
-from elasticsearch import Elasticsearch
-import logging
+"""
+CLIENT API — эмуляция запросов клиентов
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+Команды:
+- search <имя> — поиск товара по имени
+- rec <user_id> — получение рекомендаций
+"""
+
+import json
+import os
+import uuid
+import sys
+import logging
+from dotenv import load_dotenv
+from confluent_kafka import Producer
+from confluent_kafka import KafkaException
+from elasticsearch import Elasticsearch
+
+# Загружаем .env
+load_dotenv()
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
 class ClientAPI:
     def __init__(self, config_path="config.json"):
-        with open(config_path, "r") as f:
-            self.config = json.load(f)
+        try:
+            if not os.path.exists(config_path):
+                raise FileNotFoundError(f"❌ Файл {config_path} не найден")
 
-        # =====================================================
-        # Исправленная конфигурация Kafka
-        # =====================================================
-        kafka_config = {
-            "bootstrap.servers": self.config["kafka"]["bootstrap_servers"],
-            "security.protocol": "SASL_SSL",
-            "sasl.mechanism": "SCRAM-SHA-512",
-            "sasl.username": self.config["kafka"]["users"]["client"]["username"],
-            "sasl.password": self.config["kafka"]["users"]["client"]["password"],
-            # ПРАВИЛЬНЫЕ SSL настройки (PEM файлы)
-            "ssl.ca.location": self.config["kafka"]["ssl"]["truststore"],
-            "ssl.certificate.location": self.config["kafka"]["ssl"]["keystore"],
-            "ssl.key.location": self.config["kafka"]["ssl"]["key"],
-            "acks": "all",
-            "retries": 3,
-        }
+            with open(config_path, "r", encoding="utf-8") as f:
+                config_template = json.load(f)
 
-        self.producer = Producer(kafka_config)
-        self.client_topic = self.config["kafka"]["topics"]["client_requests"]
+            self.config = self._substitute_env_vars(config_template)
+            self._init_producer()
+            self._init_elasticsearch()
+            logger.info("✅ CLIENT API инициализирован успешно")
 
-        # Подключение к Elasticsearch
-        self.es = Elasticsearch([self.config["elasticsearch"]["host"]], verify_certs=False)
-        logger.info("✅ Подключение к Kafka и Elasticsearch")
+        except Exception as e:
+            logger.error(f"❌ Ошибка инициализации: {e}")
+            sys.exit(1)
+
+    def _substitute_env_vars(self, config):
+        if isinstance(config, dict):
+            return {k: self._substitute_env_vars(v) for k, v in config.items()}
+        elif isinstance(config, list):
+            return [self._substitute_env_vars(item) for item in config]
+        elif isinstance(config, str) and config.startswith("${") and config.endswith("}"):
+            env_var = config[2:-1]
+            return os.getenv(env_var, config)
+        else:
+            return config
+
+    def _init_producer(self):
+        try:
+            kafka_config = {
+                "bootstrap.servers": self.config["kafka"]["bootstrap_servers"],
+                "security.protocol": self.config["kafka"]["security_protocol"],
+                "sasl.mechanism": self.config["kafka"]["sasl_mechanism"],
+                "sasl.username": self.config["kafka"]["users"]["client"]["username"],
+                "sasl.password": self.config["kafka"]["users"]["client"]["password"],
+                "ssl.ca.location": self.config["kafka"]["ssl"]["ca"],
+                "ssl.certificate.location": self.config["kafka"]["ssl"]["certificate"],
+                "ssl.key.location": self.config["kafka"]["ssl"]["key"],
+                "acks": "all",
+                "retries": 3,
+            }
+            self.producer = Producer(kafka_config)
+            self.client_topic = self.config["kafka"]["topics"]["client_requests"]
+            logger.info("✅ Подключение к Kafka")
+        except KafkaException as e:
+            logger.error(f"❌ Ошибка подключения к Kafka: {e}")
+            raise
+
+    def _init_elasticsearch(self):
+        try:
+            self.es = Elasticsearch(
+                [self.config["elasticsearch"]["host"]],
+                verify_certs=False,  # Только для разработки
+            )
+            if self.es.ping():
+                logger.info("✅ Подключение к Elasticsearch")
+            else:
+                logger.warning("⚠️ Elasticsearch не отвечает")
+        except Exception as e:
+            logger.warning(f"⚠️ Ошибка подключения к Elasticsearch: {e}")
+            self.es = None
 
     def search_product(self, query):
-        request = {"request_id": str(uuid.uuid4()), "type": "search", "query": query}
-        self.producer.produce(topic=self.client_topic, value=json.dumps(request))
-        self.producer.flush()
-        logger.info(f"🔍 Поиск: '{query}'")
+        try:
+            request = {
+                "request_id": str(uuid.uuid4()),
+                "type": "search",
+                "query": query,
+                "timestamp": "2026-06-25T12:00:00Z"
+            }
+            self.producer.produce(topic=self.client_topic, value=json.dumps(request))
+            self.producer.flush()
+            logger.info(f"🔍 Поиск: '{query}'")
 
-        result = self.es.search(index="products", body={"query": {"match": {"name": query}}, "size": 5})
-        for hit in result["hits"]["hits"]:
-            p = hit["_source"]
-            logger.info(f"  📦 {p['name']} — {p['price']['amount']} {p['price']['currency']}")
-        return result
+            if self.es:
+                result = self.es.search(
+                    index="products",
+                    body={"query": {"match": {"name": query}}, "size": 5}
+                )
+                for hit in result["hits"]["hits"]:
+                    p = hit["_source"]
+                    logger.info(f"  📦 {p['name']} — {p['price']['amount']} {p['price']['currency']}")
+                return result
+            else:
+                logger.warning("⚠️ Elasticsearch недоступен")
+                return None
+        except Exception as e:
+            logger.error(f"❌ Ошибка поиска: {e}")
+            return None
 
     def get_recommendations(self, user_id):
-        request = {"request_id": str(uuid.uuid4()), "type": "recommendation", "user_id": user_id}
-        self.producer.produce(topic=self.client_topic, value=json.dumps(request))
-        self.producer.flush()
-        logger.info(f"🎯 Рекомендации для пользователя: {user_id}")
+        try:
+            request = {
+                "request_id": str(uuid.uuid4()),
+                "type": "recommendation",
+                "user_id": user_id,
+                "timestamp": "2026-06-25T12:00:00Z"
+            }
+            self.producer.produce(topic=self.client_topic, value=json.dumps(request))
+            self.producer.flush()
+            logger.info(f"🎯 Рекомендации для пользователя: {user_id}")
 
-        recommendations = [
-            {"product_id": "12345", "name": "Умные часы XYZ", "score": 0.95},
-            {"product_id": "12346", "name": "Смартфон ABC Pro", "score": 0.87},
-            {"product_id": "12347", "name": "Наушники XYZ Air", "score": 0.82},
-        ]
-        for rec in recommendations:
-            logger.info(f"  ⭐ {rec['name']} (score: {rec['score']})")
-        return recommendations
+            recommendations = [
+                {"product_id": "12345", "name": "Умные часы XYZ", "score": 0.95},
+                {"product_id": "12346", "name": "Смартфон ABC Pro", "score": 0.87},
+                {"product_id": "12347", "name": "Наушники XYZ Air", "score": 0.82},
+            ]
+            for rec in recommendations:
+                logger.info(f"  ⭐ {rec['name']} (score: {rec['score']})")
+            return recommendations
+        except Exception as e:
+            logger.error(f"❌ Ошибка получения рекомендаций: {e}")
+            return []
 
 
 if __name__ == "__main__":

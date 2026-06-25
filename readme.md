@@ -51,60 +51,69 @@
 
 
 📂 Структура проекта
-text
 final-project/
-├── README.md                          # Документация
-├── docker-compose.yml                 # Основной кластер + MirrorMaker 2
-├── docker-compose-monitoring.yml      # Мониторинг
-├── mirror-maker.properties            # Конфигурация MirrorMaker 2
-├── config.json                        # Конфигурация сервисов
-├── requirements.txt                   # Python зависимости
-├── .env.example                       # Переменные окружения
-├── .gitignore                         # Игнорируемые файлы
+├── README.md                          # 📄 Документация проекта
+├── docker-compose.yml                 # 🐳 Основной кластер Kafka (6 брокеров + MirrorMaker 2)
+├── docker-compose-monitoring.yml      # 📊 Мониторинг (Prometheus + Grafana + Alertmanager)
+├── mirror-maker.properties            # 🔁 Конфигурация MirrorMaker 2 для репликации
+├── config.json                        # ⚙️ Конфигурация сервисов (с переменными ${VAR})
+├── requirements.txt                   # 🐍 Python зависимости
+├── .env.example                       # 🔐 Шаблон переменных окружения (в Git)
+├── .env                               # 🔐 Реальные переменные (НЕ в Git!)
+├── .gitignore                         # 🚫 Игнорируемые файлы
 │
 ├── data/
-│   ├── products.json                  # Товары (10 шт)
-│   └── banned_products.json           # Запрещённые товары
+│   ├── products.json                  # 📦 Товары (10 шт) для SHOP API
+│   └── banned_products.json           # 🚫 Список запрещённых товаров
 │
 ├── src/
-│   ├── __init__.py
-│   ├── shop_api.py                    # SHOP API
-│   ├── client_api.py                  # CLIENT API
-│   ├── faust_processor.py             # Потоковая обработка (Faust)
-│   ├── spark_analytics.py             # Аналитика (Spark)
-│   ├── elasticsearch_consumer.py      # Запись в Elasticsearch
-│   └── banned_cli.py                  # Управление запрещёнными товарами
+│   ├── __init__.py                    # 📦 Инициализация модуля
+│   ├── shop_api.py                    # 🏪 SHOP API — отправка товаров в Kafka
+│   ├── client_api.py                  # 👤 CLIENT API — поиск и рекомендации
+│   ├── faust_processor.py             # 🔄 Потоковая обработка (фильтрация Faust)
+│   ├── spark_analytics.py             # 📊 Аналитика (Spark + HDFS)
+│   ├── elasticsearch_consumer.py      # 🔍 Запись данных в Elasticsearch
+│   └── banned_cli.py                  # 🚫 CLI управление запрещёнными товарами
 │
 ├── scripts/
-│   ├── generate-certs.sh              # Генерация SSL сертификатов
-│   ├── init-kafka.sh                  # Создание топиков и ACL
-│   └── init-acl.sh                    # Настройка ACL
+│   ├── generate-certs.sh              # 🔐 Генерация SSL сертификатов
+│   ├── init-kafka.sh                  # 🏗️ Создание топиков и ACL
+│   └── init-acl.sh                    # 🔐 Настройка ACL
 │
-├── secrets/                           # SSL сертификаты
+├── secrets/                           # 🔐 SSL сертификаты (НЕ в Git!)
 │   ├── kafka.truststore.pem           # CA сертификат
 │   ├── kafka.keystore.pem             # Сертификат клиента
 │   └── kafka.keystore.key             # Ключ клиента
 │
-├── kafka_cck1/                        # SSL для брокера 1
-├── kafka_cck2/                        # SSL для брокера 2
-├── kafka_cck3/                        # SSL для брокера 3
-├── kafka_cck4/                        # SSL для брокера 4 (второй кластер)
-├── kafka_cck5/                        # SSL для брокера 5 (второй кластер)
-├── kafka_cck6/                        # SSL для брокера 6 (второй кластер)
+├── kafka_cck1/                        # 🔐 SSL для брокера 1
+│   ├── kafka_jaas.conf
+│   ├── data/
+│   └── ssl/
+│       ├── CAs/
+│       ├── kafka.keystore.pem
+│       ├── kafka.keystore.key
+│       └── kafka.truststore.pem
+│
+├── kafka_cck2/                        # 🔐 SSL для брокера 2
+├── kafka_cck3/                        # 🔐 SSL для брокера 3
+├── kafka_cck4/                        # 🔐 SSL для брокера 4 (второй кластер)
+├── kafka_cck5/                        # 🔐 SSL для брокера 5 (второй кластер)
+├── kafka_cck6/                        # 🔐 SSL для брокера 6 (второй кластер)
 │
 ├── prometheus/
-│   ├── prometheus.yml                 # Конфиг Prometheus
-│   └── alerts.yml                     # Алерты Alertmanager
+│   ├── prometheus.yml                 # 📊 Конфиг Prometheus
+│   └── alerts.yml                     # 🔔 Алерты Alertmanager
 │
 ├── grafana-dashboards/
-│   └── kafka-dashboard.json           # Дашборд Grafana
+│   └── kafka-dashboard.json           # 📊 Дашборд Grafana
 │
-├── hadoop_data/                       # Данные HDFS
+├── hadoop_data/                       # 💾 Данные HDFS (создаётся автоматически)
 │   ├── namenode/
 │   └── datanode/
 │
-├── kafkaui.yml                        # Конфиг Kafbat UI
-└── kafka_jaas.conf                    # JAAS конфиг
+├── kafkaui.yml                        # 🖥️ Конфиг Kafbat UI
+└── kafka_jaas.conf                    # 🔐 JAAS конфиг аутентификации
+
 Шаг 1. Источники данных
 1.1. SHOP API
 Назначение: эмуляция отправки товаров от магазинов в Kafka.
@@ -674,25 +683,34 @@ bash
 # 1. Генерация сертификатов
 ./scripts/generate-certs.sh
 
-# 2. Запуск кластера
-docker-compose up -d
+# 2. Скопировать шаблон
+cp .env.example .env
 
-# 3. Инициализация топиков и ACL
-docker-compose exec kafka-init bash /scripts/init-kafka.sh
+ Отредактировать .env при необходимости
 
-# 4. Установка зависимостей
+ Установить зависимости
 pip install -r requirements.txt
 
-# 5. Запуск SHOP API
+
+# 3. Запуск кластера
+docker-compose up -d
+
+# 4. Инициализация топиков и ACL
+docker-compose exec kafka-init bash /scripts/init-kafka.sh
+
+# 5. Установка зависимостей
+pip install -r requirements.txt
+
+# 6. Запуск SHOP API
 python src/shop_api.py
 
-# 6. Запуск Faust-процессора
+# 7. Запуск Faust-процессора
 faust -A src.faust_processor worker -l info
 
-# 7. Запуск CLIENT API
+# 8. Запуск CLIENT API
 python src/client_api.py
 
-# 8. Запуск мониторинга
+# 9. Запуск мониторинга
 docker-compose -f docker-compose-monitoring.yml up -d
 Используемые технологии:
 

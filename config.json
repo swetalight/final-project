@@ -1,30 +1,30 @@
 {
   "kafka": {
-    "bootstrap_servers": "localhost:9092,localhost:9094,localhost:9096",
-    "security_protocol": "SASL_SSL",
-    "sasl_mechanism": "SCRAM-SHA-512",
+    "bootstrap_servers": "${KAFKA_BOOTSTRAP_SERVERS}",
+    "security_protocol": "${KAFKA_SECURITY_PROTOCOL}",
+    "sasl_mechanism": "${KAFKA_SASL_MECHANISM}",
     "users": {
       "shop": {
-        "username": "shop",
-        "password": "shop123"
+        "username": "${SHOP_USERNAME}",
+        "password": "${SHOP_PASSWORD}"
       },
       "client": {
-        "username": "client",
-        "password": "client456"
+        "username": "${CLIENT_USERNAME}",
+        "password": "${CLIENT_PASSWORD}"
       },
       "processor": {
-        "username": "processor",
-        "password": "processor789"
+        "username": "${PROCESSOR_USERNAME}",
+        "password": "${PROCESSOR_PASSWORD}"
       },
       "analytics": {
-        "username": "analytics",
-        "password": "analytics321"
+        "username": "${ANALYTICS_USERNAME}",
+        "password": "${ANALYTICS_PASSWORD}"
       }
     },
     "ssl": {
-      "ca": "/Users/svetlanaolefirenko/yapracticum/final_projects/secrets/kafka.truststore.pem",
-      "certificate": "/Users/svetlanaolefirenko/yapracticum/final_projects/secrets/kafka.keystore.pem",
-      "key": "/Users/svetlanaolefirenko/yapracticum/final_projects/secrets/kafka.keystore.key"
+      "ca": "${KAFKA_SSL_CA}",
+      "certificate": "${KAFKA_SSL_CERT}",
+      "key": "${KAFKA_SSL_KEY}"
     },
     "topics": {
       "products": "products",
@@ -35,15 +35,15 @@
     }
   },
   "elasticsearch": {
-    "host": "localhost:9200",
-    "index": "products"
+    "host": "${ELASTICSEARCH_HOST}",
+    "index": "${ELASTICSEARCH_INDEX}"
   },
   "hdfs": {
-    "url": "hdfs://localhost:9000",
-    "path": "/data/products"
+    "url": "${HDFS_URL}",
+    "path": "${HDFS_PATH}"
   },
   "spark": {
-    "app_name": "MarketplaceAnalytics",
-    "master": "local[*]"
+    "app_name": "${SPARK_APP_NAME}",
+    "master": "${SPARK_MASTER}"
   }
 }
