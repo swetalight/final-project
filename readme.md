@@ -679,6 +679,26 @@ groups:
 
 Инструкция по запуску:
 
+🚀 Команды для создания структуры
+bash
+# Создать все папки
+mkdir -p data src scripts secrets prometheus grafana-dashboards hadoop_data
+
+# Создать файлы
+touch README.md docker-compose.yml docker-compose-monitoring.yml \
+      mirror-maker.properties config.json requirements.txt .env.example .gitignore
+
+# Создать файлы в src
+touch src/__init__.py src/shop_api.py src/client_api.py \
+      src/faust_processor.py src/spark_analytics.py \
+      src/elasticsearch_consumer.py src/banned_cli.py
+
+# Создать файлы в scripts
+touch scripts/generate-certs.sh scripts/init-kafka.sh scripts/init-acl.sh
+
+# Сделать скрипты исполняемыми
+chmod +x scripts/*.sh
+
 bash
 # 1. Генерация сертификатов
 ./scripts/generate-certs.sh

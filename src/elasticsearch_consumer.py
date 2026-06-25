@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 """
 Elasticsearch Consumer — запись отфильтрованных данных в Elasticsearch
-
-Читает данные из топика 'filtered-products' и индексирует их в Elasticsearch.
 """
 
 import json
 import os
 import sys
 import logging
+import warnings
 from dotenv import load_dotenv
 from confluent_kafka import Consumer
 from confluent_kafka import KafkaException
@@ -75,22 +74,49 @@ class ElasticsearchConsumer:
             raise
 
     def _init_elasticsearch(self):
+        """Безопасное подключение к Elasticsearch с проверкой сертификатов"""
         try:
-            self.es = Elasticsearch(
-                [self.config["elasticsearch"]["host"]],
-                verify_certs=False,  # Только для разработки
-            )
+            host = self.config["elasticsearch"]["host"]
+            use_ssl = os.getenv("ELASTICSEARCH_USE_SSL", "true").lower() == "true"
+            ca_certs = os.getenv("ELASTICSEARCH_CA_CERTS", None)
+            username = os.getenv("ELASTICSEARCH_USERNAME", None)
+            password = os.getenv("ELASTICSEARCH_PASSWORD", None)
+
+            if use_ssl and ca_certs:
+                # ✅ БЕЗОПАСНОЕ ПОДКЛЮЧЕНИЕ
+                self.es = Elasticsearch(
+                    [host],
+                    verify_certs=True,
+                    ca_certs=ca_certs,
+                    basic_auth=(username, password) if username and password else None,
+                )
+                logger.info("✅ Безопасное подключение к Elasticsearch (SSL)")
+
+            elif use_ssl and not ca_certs:
+                # ⚠️ ТОЛЬКО ДЛЯ РАЗРАБОТКИ
+                warnings.warn(
+                    "⚠️ SSL без CA-сертификата! verify_certs=False (ТОЛЬКО ДЛЯ РАЗРАБОТКИ)",
+                    RuntimeWarning
+                )
+                self.es = Elasticsearch([host], verify_certs=False)
+                logger.warning("⚠️ Подключение к Elasticsearch без проверки сертификата")
+
+            else:
+                # HTTP (без SSL)
+                self.es = Elasticsearch([host], verify_certs=False)
+                logger.info("✅ Подключение к Elasticsearch (HTTP)")
+
             if self.es.ping():
-                logger.info("✅ Подключение к Elasticsearch")
+                logger.info("✅ Elasticsearch доступен")
             else:
                 logger.warning("⚠️ Elasticsearch не отвечает")
                 self.es = None
+
         except Exception as e:
             logger.warning(f"⚠️ Ошибка подключения к Elasticsearch: {e}")
             self.es = None
 
     def process_messages(self):
-        """Обработка сообщений из Kafka и запись в Elasticsearch"""
         logger.info("🚀 Запуск Elasticsearch консьюмера...")
 
         try:
